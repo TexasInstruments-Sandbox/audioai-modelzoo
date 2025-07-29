@@ -1,0 +1,8 @@
+models/*
+!models/*.sh
+model_artifacts/*
+!model_artifacts/*.sh
+**/.venv/
+**/__pycache__/
+**/archive/
+**/.ipynb_checkpoints/
