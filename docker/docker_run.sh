@@ -50,10 +50,7 @@ else
 fi
 
 docker run -it --rm \
-    -v /root/vggish:/root/vggish \
-    -v /root/audioai-class:/root/audioai-class \
     -v /root/audioai-modelzoo:/root/audioai-modelzoo \
-    -v /root/gtcrn:/root/gtcrn \
     -v /dev:/dev \
     --privileged \
     --network host \

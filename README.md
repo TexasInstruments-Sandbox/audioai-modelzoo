@@ -35,6 +35,14 @@ cd models_artifacts
 ./download_artifacts.sh
 ```
 
+### Docker Build
+
+On the target
+```bash
+cd docker
+./docker_build.sh
+```
+
 ## Pre-Trained Models
 
 Pretrained models are located in the **[models](models)** folder. Following are the broad categories of models included. 
@@ -49,18 +57,20 @@ _**Inference in Jupyter Notebook**_: [inference/vggish11_sc/vggish_inference.ipy
 
 Start the Docker container:
 ```bash
-cd ~/audioai-modelzoo/docker
-./docker_run.sh
+/root/audioai-modelzoo/docker/docker_run.sh
 ```
 
 Below should be run inside the Docker container.
+
 ```bash
 cd ~/audioai-modelzoo/notebooks/vggish11_sc
-jupyter-lab --ip=<target_ip_address> --no-browser --allow-root
-jupyter notebook --ip=<target_ip_address> --no-browser --allow-root --port=8888
+
+# run jupyter lab or notebook
+jupyter-lab --ip=$TARGET_IP --no-browser --allow-root
+jupyter notebook --ip=$TARGET_IP --no-browser --allow-root --port=8888
 ```
 
-Open a browser on a remote PC to enter the URL displayed on the terminal for Jupyter lab.
+Open a browser on a remote PC to enter the URL displayed on the terminal for Jupyter notebook.
 
 Python script version: Below should be run inside the Docker container.
 ```bash
@@ -73,19 +83,22 @@ python3 ./vggish_infer_audio.py --audio-file sample_wav/139951-9-0-9.wav --detai
 
 _**Inference in Jupyter Notebook**_: [inference/gtcrn_se/gtcrn_inference.ipynb](inference/gtcrn_se/gtcrn_inference.ipynb)
 
+Start the Docker container:
+```bash
+/root/audioai-modelzoo/docker/docker_run.sh
+```
+
+Below should be run inside the Docker container.
 
 ```bash
 cd inference/gtcrn_se
-python3 -m venv .venv
-source .venv/bin/activate
-pip install wheel setuptools pip --upgrade
-pip install -r requirements.txt
+source /root/venv/gtcrn/bin/activate
+# run jupyter lab or notebook
+jupyter-lab --ip=$TARGET_IP --no-browser --allow-root
+jupyter notebook --ip=$TARGET_IP --no-browser --allow-root --port=8888
 ```
 
-In the venv inside the docker container:
-```bash
-jupyter notebook --ip=<target_ip_address> --no-browser --allow-root --port=8888
-```
+Open a browser on a remote PC to enter the URL displayed on the terminal for Jupyter notebook.
 
 ### Foundational Models
 

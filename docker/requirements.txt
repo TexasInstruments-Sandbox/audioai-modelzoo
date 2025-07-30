@@ -1,0 +1,7 @@
+torch
+torchaudio
+soundfile
+librosa
+matplotlib
+notebook
+jupyterlab

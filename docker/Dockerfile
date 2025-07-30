@@ -82,22 +82,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tmux \
     net-tools \
     lsb-release \
-    python3-dev \
-    python3-pip \
-    python3-setuptools && \
+    cmake && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Audio AI dependencies
+# Python 3.10 and venv
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgomp1 && \
-    pip3 install \
-        torch \
-        torchaudio \
-        soundfile \
-        librosa \
-        matplotlib \
-        notebook \
-        jupyterlab && \
+    python3-dev \
+    python3-pip \
+    python3-setuptools \
+    python3.10-venv && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # install vision_apps lib
@@ -124,16 +117,24 @@ RUN apt-get update && \
     rm -rf /opt/ti-rpmsg-char && \
     rm -rf /var/lib/apt/lists/*
 
-# GTCRN dependencies
+# Additional dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3.10-venv \
+    libgomp1 \
     libsndfile1 && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Added 2025-07-24
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends cmake && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*    
+# Install Python packages
+COPY requirements.txt /tmp/requirements.txt
+RUN pip3 install -r /tmp/requirements.txt && \
+    rm /tmp/requirements.txt
+
+# Setup Python virtual environment for GTCRN
+COPY requirements_gtcrn.txt /tmp/requirements_gtcrn.txt
+RUN mkdir -p /root/venv && \
+    python3 -m venv /root/venv/gtcrn && \
+    /root/venv/gtcrn/bin/pip install --upgrade pip wheel && \
+    /root/venv/gtcrn/bin/pip install --no-cache-dir -r /tmp/requirements_gtcrn.txt && \
+    rm /tmp/requirements_gtcrn.txt
 
 #=========================================================================
 # add scripts
@@ -153,7 +154,7 @@ RUN echo "if [ -n \"$BASH_VERSION\" ]; then"     >  .profile && \
 # add label
 LABEL TI_IMAGE_SOURCE=${BASE_IMAGE}
 
-ENV WORK_DIR=/root/audioai-class
+ENV WORK_DIR=/root/audioai-modelzoo
 
 # setup entrypoint
 ENTRYPOINT ["/root/entrypoint.sh"]
