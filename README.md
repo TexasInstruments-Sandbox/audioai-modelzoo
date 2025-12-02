@@ -9,7 +9,7 @@ In order to run Deep Neural Networks on embedded hardware, they need to be optim
 ## Supporting TI EdgeAI Processors and SDK Version
 
 - Supporting Processors: AM62A, (TDA4VM, AM67A, AM68A, AM69A to be added)
-- TIDL Version: 10_01_00_02
+- TIDL Version: 11_01_06_00
 
 
 ## Quick Start
@@ -57,13 +57,13 @@ _**Inference in Jupyter Notebook**_: [inference/vggish11_sc/vggish_inference.ipy
 
 Start the Docker container:
 ```bash
-/root/audioai-modelzoo/docker/docker_run.sh
+/root/tidl/audioai-modelzoo/docker/docker_run.sh
 ```
 
 Below should be run inside the Docker container.
 
 ```bash
-cd ~/audioai-modelzoo/notebooks/vggish11_sc
+cd ~/tidl/audioai-modelzoo/inference/vggish11_sc
 
 # run jupyter lab or notebook
 jupyter-lab --ip=$TARGET_IP --no-browser --allow-root
@@ -85,7 +85,7 @@ _**Inference in Jupyter Notebook**_: [inference/gtcrn_se/gtcrn_inference.ipynb](
 
 Start the Docker container:
 ```bash
-/root/audioai-modelzoo/docker/docker_run.sh
+/root/tidl/audioai-modelzoo/docker/docker_run.sh
 ```
 
 Below should be run inside the Docker container.

@@ -5,3 +5,5 @@ librosa
 matplotlib
 notebook
 jupyterlab
+# downgrade the numpy for onnxruntime-tidl compatibility
+numpy==1.26.4

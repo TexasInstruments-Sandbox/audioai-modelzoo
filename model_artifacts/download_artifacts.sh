@@ -29,7 +29,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Set default version if not specified
-TIDL_VERSION="${TIDL_VERSION:-10_01_00_02}"
+TIDL_VERSION="${TIDL_VERSION:-11_01_06_00}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SERVER_URL="http://palserver.dhcp.ti.com/audioai_modelzoo/model_artifacts"

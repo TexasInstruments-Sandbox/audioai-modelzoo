@@ -36,9 +36,6 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG TIVA_LIB_VER
 ARG RPMSG_LIB_VER
 ARG SOC_NAME
-ARG BASE_URL_VA
-ARG BASE_URL_RT
-ARG SDK_VER_MAJOR
 
 #=========================================================================
 FROM --platform=linux/${ARCH} ${BASE_IMAGE} AS base-0
@@ -62,9 +59,6 @@ ARG TIVA_LIB_VER
 ARG RPMSG_LIB_VER
 ARG SOC_NAME
 ENV SOC=$SOC_NAME
-ARG BASE_URL_VA
-ARG BASE_URL_RT
-ARG SDK_VER_MAJOR
 
 # setup proxy settings
 ADD setup_proxy.sh /root/
@@ -85,37 +79,33 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cmake && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Python 3.10 and venv
+# Python 3 (Ubuntu 24.04 uses Python 3.12) and venv
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-dev \
     python3-pip \
     python3-setuptools \
+    python3-venv \
+    software-properties-common && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Install Python 3.10 for torch==1.11.0 compatibility (torch 1.11 doesn't support Python 3.12)
+RUN add-apt-repository ppa:deadsnakes/ppa -y && \
+    apt-get update && apt-get install -y --no-install-recommends \
+    python3.10 \
+    python3.10-dev \
     python3.10-venv && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# install vision_apps lib
-WORKDIR /root/scripts
-ADD install_vision_apps_lib.sh ./
-RUN ./install_vision_apps_lib.sh
-
-# install OS-RT libs
-ADD install_osrt_libs.sh ./
-RUN ./install_osrt_libs.sh
-
-# install TIDL runtime libs
-ADD install_tidl_libs.sh ./
-RUN ./install_tidl_libs.sh
-
-# install ti-rpmsg-char
-WORKDIR /opt
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends libtool autoconf automake build-essential && \
-    git clone git://git.ti.com/rpmsg/ti-rpmsg-char.git --branch $RPMSG_LIB_VER --depth 1 --single-branch && \
-    cd /opt/ti-rpmsg-char && \
-    autoreconf -i && ./configure --host=aarch64-none-linux-gnu --prefix=/usr && \
-    make && make install && \
-    rm -rf /opt/ti-rpmsg-char && \
-    rm -rf /var/lib/apt/lists/*
+# install vision_apps lib and DL runtime libs
+COPY lib/*  /usr/lib/
+COPY lib_gstreamer-1.0/* /usr/lib/aarch64-linux-gnu/gstreamer-1.0/
+COPY include/processor_sdk /usr/include/processor_sdk
+RUN ln -s /usr/lib/libtivision_apps.so.$TIVA_LIB_VER /usr/lib/libtivision_apps.so && \
+    ln -s /usr/lib/libtidl_tfl_delegate.so.1.0 /usr/lib/libtidl_tfl_delegate.so && \
+    ln -s /usr/lib/libtidl_onnxrt_EP.so.1.0 /usr/lib/libtidl_onnxrt_EP.so && \
+    ln -s /usr/lib/libvx_tidl_rt.so.1.0 /usr/lib/libvx_tidl_rt.so && \
+    ln -s /usr/lib/libti_rpmsg_char.so.$RPMSG_LIB_VER /usr/lib/libti_rpmsg_char.so.0 && \
+    ln -s /usr/lib/libti_rpmsg_char.so.0 /usr/lib/libti_rpmsg_char.so
 
 # Additional dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -125,14 +115,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install Python packages
 COPY requirements.txt /tmp/requirements.txt
-RUN pip3 install -r /tmp/requirements.txt && \
+RUN pip3 install -r /tmp/requirements.txt --break-system-packages && \
     rm /tmp/requirements.txt
 
-# Setup Python virtual environment for GTCRN
+# Setup Python virtual environment for GTCRN (using Python 3.10 for torch==1.11.0 compatibility)
 COPY requirements_gtcrn.txt /tmp/requirements_gtcrn.txt
 RUN mkdir -p /root/venv && \
-    python3 -m venv /root/venv/gtcrn && \
-    /root/venv/gtcrn/bin/pip install --upgrade pip wheel && \
+    python3.10 -m venv /root/venv/gtcrn && \
+    /root/venv/gtcrn/bin/pip install --upgrade pip wheel setuptools && \
     /root/venv/gtcrn/bin/pip install --no-cache-dir -r /tmp/requirements_gtcrn.txt && \
     rm /tmp/requirements_gtcrn.txt
 
@@ -154,7 +144,7 @@ RUN echo "if [ -n \"$BASH_VERSION\" ]; then"     >  .profile && \
 # add label
 LABEL TI_IMAGE_SOURCE=${BASE_IMAGE}
 
-ENV WORK_DIR=/root/audioai-modelzoo
+ENV WORK_DIR=/root/tidl/audioai-modelzoo
 
 # setup entrypoint
 ENTRYPOINT ["/root/entrypoint.sh"]

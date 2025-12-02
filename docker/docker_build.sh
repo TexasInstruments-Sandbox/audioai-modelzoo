@@ -36,18 +36,14 @@ set -e
 ARCH=arm64
 
 # base image
-: "${BASE_IMAGE:=arm64v8/ubuntu:22.04}"
+: "${BASE_IMAGE:=arm64v8/ubuntu:24.04}"
 
 # SDK version
-: "${SDK_VER:=10.1.0}"
+: "${SDK_VER:=11.1.0}"
 
 # build arguments
-LIB_REL_TAG=10.01.00.04
-BASE_URL_VA=https://github.com/TexasInstruments-Sandbox/edgeai-vision-apps-lib-build/releases/download/${LIB_REL_TAG}
-BASE_URL_RT=https://github.com/TexasInstruments-Sandbox/edgeai-osrt-libs-build/releases/download/rel.${LIB_REL_TAG}-ubuntu22.04
-TIVA_LIB_VER=10.1.0
-RPMSG_LIB_VER=0.6.7
-SDK_VER_MAJOR=10.1.0
+TIVA_LIB_VER=11.1.0
+RPMSG_LIB_VER=0.6.9
 
 # docker tag
 DOCKER_TAG=audioai:${SDK_VER}
@@ -74,6 +70,27 @@ if [ -d "$PROXY_DIR" ]; then
     cp -rp $PROXY_DIR/* ${DST_DIR}/proxy
 fi
 
+# copy Processor SDK libraries to the temporary folder
+mkdir -p ${DST_DIR}/lib
+Lib_files=(
+    /usr/lib/libtivision_apps.so.${TIVA_LIB_VER}
+    /usr/lib/libti_rpmsg_char.so.${RPMSG_LIB_VER}
+    /usr/lib/libtidl_tfl_delegate.so.1.0
+    /usr/lib/libtidl_onnxrt_EP.so.1.0
+    /usr/lib/libvx_tidl_rt.so.1.0
+)
+for Lib_file in ${Lib_files[@]}; do
+    cp $Lib_file ${DST_DIR}/lib
+done
+
+# copy a GST lib that was updated from PSDK
+mkdir -p ${DST_DIR}/lib_gstreamer-1.0
+cp /usr/lib/gstreamer-1.0/libgstvideo4linux2.so ${DST_DIR}/lib_gstreamer-1.0
+
+# copy PSDK header files
+mkdir -p ${DST_DIR}/include
+cp -rp /usr/include/processor_sdk ${DST_DIR}/include
+
 # docker-build
 SECONDS=0
 docker build \
@@ -85,12 +102,13 @@ docker build \
     --build-arg TIVA_LIB_VER=$TIVA_LIB_VER \
     --build-arg RPMSG_LIB_VER=$RPMSG_LIB_VER \
     --build-arg SOC_NAME=$SOC \
-    --build-arg BASE_URL_VA=$BASE_URL_VA \
-    --build-arg BASE_URL_RT=$BASE_URL_RT \
-    --build-arg SDK_VER_MAJOR=$SDK_VER_MAJOR \
-    -f Dockerfile $DST_DIR
+    -f Dockerfile .
 echo "Docker build -t $DOCKER_TAG completed!"
 duration=$SECONDS
 echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
 
 rm -rf ${DST_DIR}/proxy
+rm -rf ${DST_DIR}/lib
+rm -rf ${DST_DIR}/lib_gstreamer-1.0
+rm -rf ${DST_DIR}/include
+

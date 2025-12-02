@@ -34,10 +34,10 @@
 ARCH=arm64
 
 # base image
-: "${BASE_IMAGE:=arm64v8/ubuntu:22.04}"
+: "${BASE_IMAGE:=arm64v8/ubuntu:24.04}"
 
 # SDK version
-: "${SDK_VER:=10.1.0}"
+: "${SDK_VER:=11.1.0}"
 
 # docker tag
 DOCKER_TAG=audioai:${SDK_VER}
@@ -50,7 +50,9 @@ else
 fi
 
 docker run -it --rm \
-    -v /root/audioai-modelzoo:/root/audioai-modelzoo \
+    -v /root/tidl/audioai-modelzoo:/root/tidl/audioai-modelzoo \
+    -v /usr/lib/python3.12/site-packages/onnxruntime:/usr/local/lib/python3.12/dist-packages/onnxruntime \
+    -v /usr/lib/python3.12/site-packages/tflite_runtime:/usr/local/lib/python3.12/dist-packages/tflite_runtime \
     -v /dev:/dev \
     --privileged \
     --network host \
@@ -61,3 +63,4 @@ docker run -it --rm \
     --env SOC=$SOC \
     --device-cgroup-rule='c 235:* rmw' \
     $DOCKER_TAG $CMD
+
