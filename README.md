@@ -65,16 +65,42 @@ Below should be run inside the Docker container.
 ```bash
 cd ~/tidl/audioai-modelzoo/inference/vggish11_sc
 
-# run jupyter lab or notebook
-jupyter-lab --ip=$TARGET_IP --no-browser --allow-root
+# run jupyter notebook or lab
 jupyter notebook --ip=$TARGET_IP --no-browser --allow-root --port=8888
+jupyter-lab --ip=$TARGET_IP --no-browser --allow-root
 ```
 
 Open a browser on a remote PC to enter the URL displayed on the terminal for Jupyter notebook.
 
 Python script version: Below should be run inside the Docker container.
 ```bash
-python3 ./vggish_infer_audio.py --audio-file sample_wav/139951-9-0-9.wav --detailed-report
+python3 vggish_infer_audio.py --audio-file sample_wav/139951-9-0-9.wav --detailed-report
+```
+#### YAMNet
+
+_**Inference in Jupyter Notebook**_: [inference/yamnet_sc/yamnet_inference.ipynb](inference/yamnet_sc/yamnet_inference.ipynb)
+
+
+Start the Docker container:
+```bash
+/root/tidl/audioai-modelzoo/docker/docker_run.sh
+```
+
+Below should be run inside the Docker container.
+
+```bash
+cd ~/tidl/audioai-modelzoo/inference/yamnet_sc
+
+# run jupyter notebook or lab
+jupyter notebook --ip=$TARGET_IP --no-browser --allow-root --port=8888
+jupyter-lab --ip=$TARGET_IP --no-browser --allow-root
+```
+
+Open a browser on a remote PC to enter the URL displayed on the terminal for Jupyter notebook.
+
+Python script version: Below should be run inside the Docker container.
+```bash
+python3 yamnet_infer_audio.py --audio-file samples/miaow_16k.wav --detailed-report
 ```
 
 ### Speech Enhancement / Audio Denoising (Audio-to-Audio)
