@@ -1,5 +1,6 @@
 import torch
 import torchaudio
+import soundfile as sf
 
 def preprocess_audio_waveform(file_path, sample_rate=16000, duration=4.0, num_samples=None):
     """
@@ -15,7 +16,12 @@ def preprocess_audio_waveform(file_path, sample_rate=16000, duration=4.0, num_sa
                  where channels=1 (mono) and time_samples = sample_rate * duration
     """
     # waveform: [channels, samples]
-    waveform, sr = torchaudio.load(file_path)
+    # Use soundfile directly to avoid torchcodec dependency issues
+    waveform_np, sr = sf.read(file_path, dtype='float32')
+    # Convert to torch tensor and ensure shape is [channels, samples]
+    waveform = torch.from_numpy(waveform_np.T).float()
+    if waveform.dim() == 1:
+        waveform = waveform.unsqueeze(0)  # Add channel dimension for mono audio
 
     # Convert to mono if stereo
     if waveform.shape[0] > 1:

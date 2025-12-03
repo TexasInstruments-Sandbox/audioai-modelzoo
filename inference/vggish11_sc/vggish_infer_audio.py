@@ -249,7 +249,7 @@ def main():
 
     # Basic configuration
     WORK_DIR = os.path.abspath(os.path.join(os.getcwd(), '..', '..'))
-    base_artifacts_folder = os.path.join(WORK_DIR, 'model_artifacts', '10_01_00_02', SOC, f'int{args.tensor_bits}')
+    base_artifacts_folder = os.path.join(WORK_DIR, 'model_artifacts', '11_01_06_00', SOC, f'int{args.tensor_bits}')
     models_base_path = os.path.join(WORK_DIR, 'models', 'onnx')
 
     # Check if audio file exists
