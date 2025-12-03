@@ -24,4 +24,7 @@ export TARGET_IP
 # working dir
 cd $WORK_DIR
 
+# Set Numba cache directory for system Python (3.12)
+export NUMBA_CACHE_DIR="/root/.numba_cache/python3.12"
+
 exec "$@"

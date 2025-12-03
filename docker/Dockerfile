@@ -118,6 +118,12 @@ COPY requirements.txt /tmp/requirements.txt
 RUN pip3 install -r /tmp/requirements.txt --break-system-packages && \
     rm /tmp/requirements.txt
 
+# Warmup system Python packages (Numba, PyTorch, etc.) - Python 3.12
+COPY warmup_packages.py /tmp/warmup_packages.py
+RUN mkdir -p /root/.numba_cache/python3.12 && \
+    NUMBA_CACHE_DIR=/root/.numba_cache/python3.12 python3 /tmp/warmup_packages.py && \
+    rm /tmp/warmup_packages.py
+
 # Setup Python virtual environment for GTCRN (using Python 3.10 for torch==1.11.0 compatibility)
 COPY requirements_gtcrn.txt /tmp/requirements_gtcrn.txt
 RUN mkdir -p /root/venv && \
@@ -125,6 +131,15 @@ RUN mkdir -p /root/venv && \
     /root/venv/gtcrn/bin/pip install --upgrade pip wheel setuptools && \
     /root/venv/gtcrn/bin/pip install --no-cache-dir -r /tmp/requirements_gtcrn.txt && \
     rm /tmp/requirements_gtcrn.txt
+
+# Warmup GTCRN venv packages - Python 3.10
+COPY warmup_packages.py /tmp/warmup_packages.py
+RUN mkdir -p /root/.numba_cache/python3.10 && \
+    NUMBA_CACHE_DIR=/root/.numba_cache/python3.10 /root/venv/gtcrn/bin/python /tmp/warmup_packages.py && \
+    rm /tmp/warmup_packages.py
+
+# Configure GTCRN venv to use separate Numba cache
+RUN echo 'export NUMBA_CACHE_DIR="/root/.numba_cache/python3.10"' >> /root/venv/gtcrn/bin/activate
 
 #=========================================================================
 # add scripts
