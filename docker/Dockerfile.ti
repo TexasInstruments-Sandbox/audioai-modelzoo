@@ -1,0 +1,46 @@
+ARG BASE_IMAGE_TAG
+ARG TIVA_LIB_VER
+ARG RPMSG_LIB_VER
+ARG SOC_NAME
+
+#=========================================================================
+FROM ${BASE_IMAGE_TAG}
+ARG TIVA_LIB_VER
+ARG RPMSG_LIB_VER
+ARG SOC_NAME
+ENV SOC=$SOC_NAME
+
+# install vision_apps lib and DL runtime libs
+COPY lib/*  /usr/lib/
+COPY lib_gstreamer-1.0/* /usr/lib/aarch64-linux-gnu/gstreamer-1.0/
+COPY include/processor_sdk /usr/include/processor_sdk
+RUN ln -s /usr/lib/libtivision_apps.so.$TIVA_LIB_VER /usr/lib/libtivision_apps.so && \
+    ln -s /usr/lib/libtidl_tfl_delegate.so.1.0 /usr/lib/libtidl_tfl_delegate.so && \
+    ln -s /usr/lib/libtidl_onnxrt_EP.so.1.0 /usr/lib/libtidl_onnxrt_EP.so && \
+    ln -s /usr/lib/libvx_tidl_rt.so.1.0 /usr/lib/libvx_tidl_rt.so && \
+    ln -s /usr/lib/libti_rpmsg_char.so.$RPMSG_LIB_VER /usr/lib/libti_rpmsg_char.so.0 && \
+    ln -s /usr/lib/libti_rpmsg_char.so.0 /usr/lib/libti_rpmsg_char.so
+
+# install custom Python packages (onnxruntime and tflite_runtime)
+COPY python_packages/*.tar.gz /tmp/
+RUN mkdir -p /usr/local/lib/python3.12/dist-packages && \
+    if [ -f /tmp/onnxruntime.tar.gz ]; then \
+        tar -xzf /tmp/onnxruntime.tar.gz -C /usr/local/lib/python3.12/dist-packages && \
+        rm /tmp/onnxruntime.tar.gz; \
+    fi && \
+    if [ -f /tmp/tflite_runtime.tar.gz ]; then \
+        tar -xzf /tmp/tflite_runtime.tar.gz -C /usr/local/lib/python3.12/dist-packages && \
+        rm /tmp/tflite_runtime.tar.gz; \
+    fi
+
+#=========================================================================
+# add scripts
+ADD entrypoint.sh /root/
+
+ENV WORK_DIR=/root/tidl/audioai-modelzoo
+
+# add label
+LABEL TI_IMAGE_SOURCE=${BASE_IMAGE}
+
+# setup entrypoint
+ENTRYPOINT ["/root/entrypoint.sh"]

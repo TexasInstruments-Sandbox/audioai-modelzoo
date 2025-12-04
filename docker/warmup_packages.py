@@ -3,7 +3,6 @@
 import os
 import warnings
 warnings.filterwarnings('ignore')
-os.environ['ORT_DISABLE_DEVICE_DISCOVERY'] = '1'
 
 print("Warming up packages...")
 
@@ -48,15 +47,6 @@ try:
     import torchaudio.transforms as ta_trans
     ta_trans.MelSpectrogram(sample_rate=sr, n_fft=1024, hop_length=512, n_mels=64)(x)
     ta_trans.Resample(48000, sr)(torch.randn(1, 48000))
-    print("✓")
-except (ImportError, Exception):
-    print("skip")
-
-# ONNX Runtime
-try:
-    print("  - ONNX Runtime...", end=" ", flush=True)
-    import onnxruntime as ort
-    _ = ort.get_available_providers()
     print("✓")
 except (ImportError, Exception):
     print("skip")
