@@ -1,0 +1,136 @@
+name: Build Base Docker Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      sdk_version:
+        description: 'SDK version (e.g., 11.1.0)'
+        required: true
+        default: '11.1.0'
+        type: string
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build:
+    name: Build Base Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Lowercase image name
+        id: image
+        run: echo "name=$(echo '${{ github.repository_owner }}/audioai-base' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: linux/arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            image=moby/buildkit:latest
+            network=host
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}
+          tags: |
+            type=raw,value=${{ inputs.sdk_version }}
+            type=raw,value=latest,enable={{is_default_branch}}
+          labels: |
+            org.opencontainers.image.title=AudioAI Base Image
+            org.opencontainers.image.description=Framework-independent base image for TI EdgeAI audio inference
+            org.opencontainers.image.vendor=Texas Instruments
+            ti.sdk.version=${{ inputs.sdk_version }}
+            ti.build.stage=base
+            ti.runner.arch=x86_64
+
+      - name: Prepare build context
+        run: |
+          cd docker
+          mkdir -p proxy
+          echo "Created empty proxy directory for USE_PROXY=0 build"
+
+      - name: Build base Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: ./docker
+          file: ./docker/Dockerfile.base
+          platforms: linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            ARCH=arm64
+            BASE_IMAGE=arm64v8/ubuntu:24.04
+            USE_PROXY=0
+            HTTP_PROXY=
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          outputs: type=image,name=${{ env.REGISTRY }}/${{ steps.image.outputs.name }},push=true
+
+      - name: Image digest
+        run: |
+          echo "Image digest: ${{ steps.build.outputs.digest }}"
+
+      - name: Generate build summary
+        if: always()
+        run: |
+          echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **SDK Version**: ${{ inputs.sdk_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Base Image**: arm64v8/ubuntu:24.04" >> $GITHUB_STEP_SUMMARY
+          echo "- **Runner Type**: amd64 + QEMU" >> $GITHUB_STEP_SUMMARY
+          echo "- **Push to Registry**: true" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Image Tags" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Pull Command" >> $GITHUB_STEP_SUMMARY
+            echo '```bash' >> $GITHUB_STEP_SUMMARY
+            echo "docker pull ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ inputs.sdk_version }}" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Build Performance" >> $GITHUB_STEP_SUMMARY
+          echo "Build completed in ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Expected time: 45-90 min (first build), 15-30 min (cached)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Export image metadata
+        run: |
+          mkdir -p artifacts
+          echo "SDK_VERSION=${{ inputs.sdk_version }}" > artifacts/build-info.txt
+          echo "BASE_IMAGE=arm64v8/ubuntu:24.04" >> artifacts/build-info.txt
+          echo "IMAGE_DIGEST=${{ steps.build.outputs.digest }}" >> artifacts/build-info.txt
+          echo "RUNNER_ARCH=x86_64" >> artifacts/build-info.txt
+          echo "BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> artifacts/build-info.txt
+          echo "GIT_SHA=${{ github.sha }}" >> artifacts/build-info.txt
+          echo "GIT_REF=${{ github.ref }}" >> artifacts/build-info.txt
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-metadata-${{ inputs.sdk_version }}
+          path: artifacts/
+          retention-days: 30
