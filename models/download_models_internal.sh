@@ -1,25 +1,14 @@
 #!/bin/bash
-# filepath: models/download_models.sh
+# filepath: /home/jroh/tidl/audioai-modelzoo/download_models.sh
 
 set -e
-
-# Configuration
-TIDL_VER="11_01_06_00"
-SOC="am62a"
-
-# Model files to download
-MODELS=(
-    "gtcrn_dns3.onnx"
-    "vggish11_20250324-1807_ptq.onnx"
-    "yamnet_combined.onnx"
-)
 
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Configuration
-BASE_URL="https://software-dl.ti.com/jacinto7/esd/modelzoo/audioai/${TIDL_VER}/models/onnx"
-LOCAL_MODELS_DIR="$SCRIPT_DIR/onnx"  # Download models to versioned subdirectory
+SERVER_URL="http://palserver.dhcp.ti.com/audioai_modelzoo/models"
+LOCAL_MODELS_DIR="$SCRIPT_DIR"  # Download models to the same directory as the script
 
 # Colors for better UI
 RED='\033[0;31m'
@@ -42,12 +31,71 @@ ensure_dir() {
     fi
 }
 
+# Function to recursively fetch all model files from server
+fetch_models_list() {
+    # Print status to stderr so it doesn't mix with results
+    print_color $CYAN "Fetching available models from server..." >&2
+    
+    local models=()
+    
+    # Function to recursively explore directories
+    explore_directory() {
+        local url="$1"
+        local path="$2"
+        
+        local html=""
+        if command -v wget &> /dev/null; then
+            html=$(wget -qO- "$url" 2>/dev/null || echo "")
+        elif command -v curl &> /dev/null; then
+            html=$(curl -s "$url" 2>/dev/null || echo "")
+        fi
+        
+        if [ -z "$html" ]; then
+            return
+        fi
+        
+        # Extract links, filter out parent directory and unwanted entries
+        local links=$(echo "$html" | grep -oE 'href="[^"]*"' | sed 's/href="//;s/"//' | grep -v '^/' | grep -v '^\.\.' | grep -v '^?' | grep -v '^$')
+        
+        for link in $links; do
+            if [[ "$link" == */ ]]; then
+                # It's a directory, explore recursively
+                local dir_name="${link%/}"
+                if [ -n "$path" ]; then
+                    explore_directory "$url$link" "$path/$dir_name"
+                else
+                    explore_directory "$url$link" "$dir_name"
+                fi
+            elif [[ "$link" =~ \.(onnx|tflite|pb|h5|pth|pt|model)$ ]]; then
+                # It's a model file
+                if [ -n "$path" ]; then
+                    models+=("$path/$link")
+                else
+                    models+=("$link")
+                fi
+            fi
+        done
+    }
+    
+    # Start exploration from root
+    explore_directory "$SERVER_URL/" ""
+    
+    # Return only the models array to stdout
+    printf '%s\n' "${models[@]}"
+}
+
 # Function to display models menu
 display_models_menu() {
+    local models=("$@")
     local selected=()
     
+    if [ ${#models[@]} -eq 0 ]; then
+        print_color $RED "No models found on the server."
+        exit 1
+    fi
+    
     # Initialize all models as selected
-    for ((i=0; i<${#MODELS[@]}; i++)); do
+    for ((i=0; i<${#models[@]}; i++)); do
         selected[i]=1
     done
     
@@ -57,13 +105,11 @@ display_models_menu() {
         print_color $BLUE "║                    AudioAI ModelZoo Downloader                   ║"
         print_color $BLUE "╚══════════════════════════════════════════════════════════════════╝"
         echo
-        print_color $CYAN "TIDL Version: $TIDL_VER | SoC: $SOC"
-        echo
         print_color $CYAN "Available Models (✓ = selected, ✗ = deselected):"
         echo
         
-        for ((i=0; i<${#MODELS[@]}; i++)); do
-            local model="${MODELS[i]}"
+        for ((i=0; i<${#models[@]}; i++)); do
+            local model="${models[i]}"
             local status="✗"
             local color=$RED
             
@@ -88,7 +134,7 @@ display_models_menu() {
         case "$choice" in
             [1-9]|[1-9][0-9]|[1-9][0-9][0-9])
                 local idx=$((choice-1))
-                if [ $idx -ge 0 ] && [ $idx -lt ${#MODELS[@]} ]; then
+                if [ $idx -ge 0 ] && [ $idx -lt ${#models[@]} ]; then
                     if [ "${selected[idx]}" -eq 1 ]; then
                         selected[idx]=0
                     else
@@ -97,20 +143,20 @@ display_models_menu() {
                 fi
                 ;;
             a|A)
-                for ((i=0; i<${#MODELS[@]}; i++)); do
+                for ((i=0; i<${#models[@]}; i++)); do
                     selected[i]=1
                 done
                 ;;
             n|N)
-                for ((i=0; i<${#MODELS[@]}; i++)); do
+                for ((i=0; i<${#models[@]}; i++)); do
                     selected[i]=0
                 done
                 ;;
             d|D)
                 local selected_models=()
-                for ((i=0; i<${#MODELS[@]}; i++)); do
+                for ((i=0; i<${#models[@]}; i++)); do
                     if [ "${selected[i]}" -eq 1 ]; then
-                        selected_models+=("${MODELS[i]}")
+                        selected_models+=("${models[i]}")
                     fi
                 done
                 
@@ -140,17 +186,16 @@ download_models() {
     
     echo
     print_color $CYAN "Starting download of ${#models[@]} model(s)..."
-    echo
-    
-    # Create the local models directory if it doesn't exist
-    ensure_dir "$LOCAL_MODELS_DIR"
     
     for model in "${models[@]}"; do
         local local_path="$LOCAL_MODELS_DIR/$model"
-        local remote_url="$BASE_URL/$model"
+        local remote_url="$SERVER_URL/$model"
         
         print_color $YELLOW "Downloading: $model"
-        print_color $CYAN "  From: $remote_url"
+        
+        # Create local directory structure
+        local dir_path=$(dirname "$local_path")
+        ensure_dir "$dir_path"
         
         # Download the file
         if command -v wget &> /dev/null; then
@@ -185,21 +230,41 @@ main() {
         exit 1
     fi
     
+    # Show status message to user, then fetch models list cleanly
+    print_color $CYAN "Fetching available models from server..."
+    models_list=$(fetch_models_list 2>/dev/null)
+    
+    if [ -z "$models_list" ]; then
+        print_color $RED "No models found on the server."
+        exit 1
+    fi
+    
+    # Convert to array, filtering out any empty lines and unwanted content
+    readarray -t models_array <<< "$models_list"
+    
+    # Remove empty elements and filter out any status messages
+    local filtered_models=()
+    for model in "${models_array[@]}"; do
+        # Skip empty lines, whitespace-only lines, and lines containing ANSI color codes
+        if [ -n "$model" ] && [[ ! "$model" =~ ^[[:space:]]*$ ]] && [[ ! "$model" =~ \\033 ]]; then
+            filtered_models+=("$model")
+        fi
+    done
+    
     # Non-interactive mode: download all models
     if [ "$NON_INTERACTIVE" = true ]; then
-        print_color $CYAN "Non-interactive mode: downloading all ${#MODELS[@]} model(s)..."
-        print_color $CYAN "TIDL Version: $TIDL_VER | SoC: $SOC"
+        print_color $CYAN "Non-interactive mode: downloading all ${#filtered_models[@]} model(s)..."
         echo
-        for model in "${MODELS[@]}"; do
-            print_color $GREEN "  → $model"
+        for model in "${filtered_models[@]}"; do
+            print_color $GREEN "  ✓ $model"
         done
         echo
-        download_models "${MODELS[@]}"
+        download_models "${filtered_models[@]}"
         return
     fi
     
     # Interactive mode
-    display_models_menu
+    display_models_menu "${filtered_models[@]}"
 }
 
 # Parse command line arguments
@@ -214,14 +279,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         -h|--help)
             print_color $BLUE "AudioAI ModelZoo Downloader"
-            print_color $BLUE "============================"
+            print_color $BLUE "=========================="
             echo
             print_color $YELLOW "Usage: $0 [OPTIONS]"
             print_color $YELLOW "       $0 -h|--help"
-            echo
-            print_color $CYAN "Configuration:"
-            print_color $CYAN "  TIDL Version: $TIDL_VER"
-            print_color $CYAN "  SoC: $SOC"
             echo
             print_color $CYAN "Options:"
             print_color $CYAN "  -y, --yes            Non-interactive mode, download all models"
@@ -230,11 +291,6 @@ while [[ $# -gt 0 ]]; do
             print_color $CYAN "Examples:"
             print_color $CYAN "  $0                   # Interactive mode"
             print_color $CYAN "  $0 -y                # Non-interactive, download all models"
-            echo
-            print_color $CYAN "Available models:"
-            for model in "${MODELS[@]}"; do
-                print_color $CYAN "  - $model"
-            done
             exit 0
             ;;
         *)
