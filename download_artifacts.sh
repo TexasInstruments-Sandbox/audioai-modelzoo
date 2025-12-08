@@ -1,5 +1,5 @@
 #!/bin/bash
-# filepath: model_artifacts/download_artifacts.sh
+# filepath: download_artifacts.sh
 
 set -e
 
@@ -18,7 +18,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Configuration
 BASE_URL="https://software-dl.ti.com/jacinto7/esd/modelzoo/audioai/${TIDL_VER}/modelartifacts/${SOC}"
-LOCAL_ARTIFACTS_DIR="$SCRIPT_DIR/${TIDL_VER}/${SOC}"  # Download to versioned subdirectory
+LOCAL_ARTIFACTS_DIR="$SCRIPT_DIR/model_artifacts/${TIDL_VER}/${SOC}"  # Download to model_artifacts subdirectory
 
 # Colors for better UI
 RED='\033[0;31m'

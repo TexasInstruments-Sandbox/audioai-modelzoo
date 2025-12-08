@@ -1,5 +1,5 @@
 #!/bin/bash
-# filepath: models/download_models.sh
+# filepath: download_models.sh
 
 set -e
 
@@ -19,7 +19,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Configuration
 BASE_URL="https://software-dl.ti.com/jacinto7/esd/modelzoo/audioai/${TIDL_VER}/models/onnx"
-LOCAL_MODELS_DIR="$SCRIPT_DIR/onnx"  # Download models to versioned subdirectory
+LOCAL_MODELS_DIR="$SCRIPT_DIR/models/onnx"  # Download models to models/onnx subdirectory
 
 # Colors for better UI
 RED='\033[0;31m'

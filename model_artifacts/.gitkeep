@@ -1,0 +1,2 @@
+# This file ensures the model_artifacts/ directory is preserved in git
+# Model artifacts will be downloaded here by running: ./download_artifacts.sh

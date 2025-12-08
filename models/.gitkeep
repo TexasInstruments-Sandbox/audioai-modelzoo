@@ -1,0 +1,2 @@
+# This file ensures the models/ directory is preserved in git
+# Model files will be downloaded here by running: ./download_models.sh
