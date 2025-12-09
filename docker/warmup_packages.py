@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
-"""Pre-compile critical packages for audio inference (Numba, PyTorch, etc.)"""
-import os
+"""Warmup PyTorch/Torchaudio to trigger lazy initialization and validate installation"""
 import warnings
 warnings.filterwarnings('ignore')
 
 print("Warming up packages...")
 
-# Dummy data
 sr = 16000
 
-# NumPy
+# NumPy - fast import validation
 try:
     print("  - NumPy...", end=" ", flush=True)
     import numpy as np
@@ -18,19 +16,7 @@ try:
 except ImportError:
     print("skip")
 
-# Librosa (Numba JIT compilation)
-try:
-    print("  - Librosa (Numba JIT)...", end=" ", flush=True)
-    import librosa
-    stft = librosa.stft(audio, n_fft=512, hop_length=256, win_length=512)
-    librosa.istft(stft, hop_length=256, win_length=512)
-    librosa.amplitude_to_db(np.abs(stft), ref=np.max)
-    librosa.feature.melspectrogram(y=audio, sr=sr, n_fft=1024, hop_length=512, n_mels=64)
-    print("✓")
-except (ImportError, Exception):
-    print("skip")
-
-# PyTorch
+# PyTorch - may have lazy module loading
 try:
     print("  - PyTorch...", end=" ", flush=True)
     import torch
@@ -41,7 +27,7 @@ try:
 except (ImportError, Exception):
     print("skip")
 
-# Torchaudio
+# Torchaudio - may have lazy module loading
 try:
     print("  - Torchaudio...", end=" ", flush=True)
     import torchaudio.transforms as ta_trans
@@ -51,20 +37,20 @@ try:
 except (ImportError, Exception):
     print("skip")
 
-# Matplotlib + Librosa display
+# Matplotlib - validate installation
 try:
     print("  - Matplotlib...", end=" ", flush=True)
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     fig, ax = plt.subplots()
-    librosa.display.specshow(np.random.randn(257, 100), sr=sr, hop_length=256, ax=ax)
+    ax.plot([0, 1], [0, 1])
     plt.close('all')
     print("✓")
 except (ImportError, Exception):
     print("skip")
 
-# SoundFile
+# SoundFile - validate installation
 try:
     print("  - SoundFile...", end=" ", flush=True)
     import soundfile as sf
@@ -73,3 +59,4 @@ except (ImportError, Exception):
     print("skip")
 
 print("Warmup complete!")
+
