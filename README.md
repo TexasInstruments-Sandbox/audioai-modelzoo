@@ -1,77 +1,67 @@
 # AudioAI-ModelZoo
 
-This repository provides a collection of example Deep Neural Network (DNN) Models for various Audio tasks.
+A collection of optimized Deep Neural Network (DNN) models for Audio Tasks on TI EdgeAI processors. Models are converted from PyTorch and TensorFlow into embedded-friendly formats optimized for TI SoCs.
 
-In order to run Deep Neural Networks on embedded hardware, they need to be optimized and converted into embedded friendly formats. We have converted/exported several models from the original training frameworks in PyTorch, Tensorflow and MxNet into these embedded friendly formats and is being hosted in this repository. In this process we also make sure that these models provide optimized inference speed on our SoCs, so sometimes minor modifications are made to the models wherever necessary. These models provide a good starting point for our customers to explore high performance Deep Learning on our SoCs.
 
-**Notice**: The models in this repository are being made available for experimentation and development  - they are not meant for deployment in production.
+**Notice**: The models in this repository are being made available for experimentation and development - they are not meant for deployment in production.
 
-## Supporting TI EdgeAI Processors and SDK Version
+## System Requirements
 
-- Supporting Processors: AM62A (can be extended easily to TDA4VM, AM67A, AM68A, AM69A)
-- TIDL Version: 11_01_06_00
-
+- **Processors**: AM62A (extensible to TDA4VM, AM67A, AM68A, AM69A)
+- **TIDL Version**: 11_01_06_00
 
 ## Quick Start
 
+### Git pull the project
+
+On the Linux command line on the target (AM62A)
+
+```bash
+mkdir ~/tidl && cd ~/tidl
+git clone https://github.com/TexasInstruments-Sandbox/audioai-modelzoo.git
+cd audioai-modelzoo
+```
+
 ### Download Models and Model Artifacts
 
-Use the interactive model downloader to fetch pre-trained models:
-
 ```bash
-cd models
-./download_models.sh
+./download_models.sh -y
+./download_artifacts.sh -y
 ```
 
-The script provides an interactive menu to:
-- View all available models on the server
-- Select/deselect models for download
-- Download selected models maintaining folder structure
+Both scripts provide interactive menus to select and download models.
 
-Similarly, use the interactive model artifact downloader: 
-
-```bash
-cd models_artifacts
-./download_artifacts.sh
-```
-
-### Docker Build
-
-On the target
+### Build Docker Image
 
 ```bash
 cd docker
 ./docker_build.sh
 ```
 
-## Jupyter Server on the Target
+## Start Jupyter Server
 
-Start the Docker container:
+Launch the Docker container:
 
 ```bash
 /root/tidl/audioai-modelzoo/docker/docker_run.sh
 ```
 
-Below should be run inside the Docker container.
+Inside the Docker container, start Jupyter Lab:
 
 ```bash
 cd ~/tidl/audioai-modelzoo/inference
-
-# run Jupyter lab
 jupyter-lab --ip=$TARGET_IP --no-browser --allow-root
 ```
 
-Open a browser on a remote PC to enter the URL displayed on the terminal for Jupyter lab.
+Access Jupyter Lab from your browser using the URL displayed in the terminal. 
 
 ## Pre-Trained Models
 
-Pretrained models are located in the **[models](models)** folder. Following are the broad categories of models included. 
+Models are located in the **[models](models)** folder.
 
 ### Sound Classification (Audio-to-Class)
 
 #### VGGish11
-
-Set up Jupyter lab server on the target following ["Jupyter Server on the Target"](#jupyter-server-on-the-target).
 
 _**Inference in Jupyter Notebook**_: [inference/vggish11_sc/vggish_inference.ipynb](inference/vggish11_sc/vggish_inference.ipynb)
 
@@ -84,8 +74,6 @@ python3 vggish_infer_audio.py --audio-file sample_wav/139951-9-0-9.wav --detaile
 
 #### YAMNet
 
-Set up Jupyter lab server on the target following ["Jupyter Server on the Target"](#jupyter-server-on-the-target).
-
 _**Inference in Jupyter Notebook**_: [inference/yamnet_sc/yamnet_inference.ipynb](inference/yamnet_sc/yamnet_inference.ipynb)
 
 Python script version: Below should be run inside the Docker container.
@@ -94,12 +82,9 @@ Python script version: Below should be run inside the Docker container.
 python3 yamnet_infer_audio.py --audio-file samples/miaow_16k.wav --detailed-report
 ```
 
-### Speech Enhancement / Audio Denoising (Audio-to-Audio)
+### Speech Enhancement (Audio-to-Audio)
 
 #### GTCRN
 
-Set up Jupyter lab server on the target following ["Jupyter Server on the Target"](#jupyter-server-on-the-target).
-
 _**Inference in Jupyter Notebook**_: [inference/gtcrn_se/gtcrn_inference.ipynb](inference/gtcrn_se/gtcrn_inference.ipynb)
-
 
