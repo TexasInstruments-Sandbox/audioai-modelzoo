@@ -31,12 +31,20 @@ cd audioai-modelzoo
 
 Both scripts provide interactive menus to select and download models.
 
-### Build Docker Image
+### Docker Image Setup
+
+This repository uses a two-stage Docker build process (see [docker](docker) folder). The base image contains all dependencies and is pre-built and available from GitHub Container Registry. The TI-specific image adds processor-specific libraries on top of the base.
+
+Pull the pre-built base image and build the TI image:
 
 ```bash
+docker pull ghcr.io/texasinstruments-sandbox/audioai-base:11.1.0
+docker tag ghcr.io/texasinstruments-sandbox/audioai-base:11.1.0 audioai-base:11.1.0
 cd docker
-./docker_build.sh
+./docker_build_ti.sh
 ```
+
+If you want to build the base image from scratch instead of pulling it, run `./docker_build_base.sh` before building the TI image.
 
 ## Start Jupyter Server
 
@@ -53,11 +61,19 @@ cd ~/tidl/audioai-modelzoo/inference
 jupyter-lab --ip=$TARGET_IP --no-browser --allow-root
 ```
 
-Access Jupyter Lab from your browser using the URL displayed in the terminal. 
+Access Jupyter Lab from your browser using the URL displayed in the terminal.
+
+![JupyterLab running inside the Docker container](docs/jupyter_lab_screenshot.jpg)
 
 ## Pre-Trained Models
 
 Models are located in the **[models](models)** folder.
+
+### Speech Enhancement (Audio-to-Audio)
+
+#### GTCRN
+
+_**Inference in Jupyter Notebook**_: [inference/gtcrn_se/gtcrn_inference.ipynb](inference/gtcrn_se/gtcrn_inference.ipynb)
 
 ### Sound Classification (Audio-to-Class)
 
@@ -82,9 +98,19 @@ Python script version: Below should be run inside the Docker container.
 python3 yamnet_infer_audio.py --audio-file samples/miaow_16k.wav --detailed-report
 ```
 
-### Speech Enhancement (Audio-to-Audio)
+## Performance Benchmarks
 
-#### GTCRN
+|      Model      | Input Audio (sec) | Inference Time (ms) | Real-Time Factor |
+|:---------------:|:-----------------:|:-------------------:|:----------------:|
+|  GTCRN (FP32)   |       9.77        |       679.90        |      0.070       |
+| VGGish11 (INT8) |       4.00        |        91.10        |      0.023       |
+|  YAMNet (INT8)  | 6.73 (7 patches)  |     17.53 total     |      0.003       |
 
-_**Inference in Jupyter Notebook**_: [inference/gtcrn_se/gtcrn_inference.ipynb](inference/gtcrn_se/gtcrn_inference.ipynb)
+*Note: Real-Time Factor (RTF) = Processing Time / Audio Duration. RTF < 1.0 means faster than real-time. Performance metrics may vary depending on system conditions.*
+
+## Model References
+
+- **GTCRN**: https://github.com/Xiaobin-Rong/gtcrn
+- **VGGish**: https://github.com/tensorflow/models/tree/master/research/audioset/vggish
+- **YAMNet**: https://github.com/tensorflow/models/tree/master/research/audioset/yamnet, https://github.com/w-hc/torch_audioset
 
