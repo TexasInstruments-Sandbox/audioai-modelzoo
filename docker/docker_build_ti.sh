@@ -2,15 +2,23 @@
 
 set -e
 
+# Source SDK version
+SCRIPT_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+source "${SCRIPT_DIR}/sdk_version.sh"
+
 # base image
 : "${BASE_IMAGE:=arm64v8/ubuntu:24.04}"
 
-# SDK version
-: "${SDK_VER:=11.1.0}"
+# build arguments - detect from filesystem, fallback to defaults
+TIVA_LIB_VER=$(ls -1 /usr/lib/libtivision_apps.so.* 2>/dev/null | sed 's|.*/libtivision_apps.so.||' | sort -V | tail -1 )
+RPMSG_LIB_VER=$(ls -1 /usr/lib/libti_rpmsg_char.so.* 2>/dev/null | sed 's|.*/libti_rpmsg_char.so.||' | sort -V | tail -1 )
+echo "TIVA_LIB_VER = ${TIVA_LIB_VER}"
+echo "RPMSG_LIB_VER = ${RPMSG_LIB_VER}"
 
-# build arguments
-TIVA_LIB_VER=11.1.0
-RPMSG_LIB_VER=0.6.9
+# check version mismatch
+if [ "${TIVA_LIB_VER}" != "${SDK_VER}" ]; then
+    echo "WARNING: TIVA_LIB_VER (${TIVA_LIB_VER}) does not match SDK_VER (${SDK_VER})"
+fi
 
 # docker tags
 BASE_DOCKER_TAG=audioai-base:${SDK_VER}

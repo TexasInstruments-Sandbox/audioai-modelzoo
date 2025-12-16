@@ -2,12 +2,6 @@ name: Build Base Docker Image
 
 on:
   workflow_dispatch:
-    inputs:
-      sdk_version:
-        description: 'SDK version (e.g., 11.1.0)'
-        required: true
-        default: '11.1.0'
-        type: string
 
 env:
   REGISTRY: ghcr.io
@@ -28,6 +22,13 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Read SDK version
+        id: sdk
+        run: |
+          SDK_VERSION=$(grep '^SDK_VER=' docker/sdk_version.sh | cut -d'=' -f2)
+          echo "version=${SDK_VERSION}" >> $GITHUB_OUTPUT
+          echo "SDK Version: ${SDK_VERSION}"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -54,13 +55,13 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}
           tags: |
-            type=raw,value=${{ inputs.sdk_version }}
+            type=raw,value=${{ steps.sdk.outputs.version }}
             type=raw,value=latest,enable={{is_default_branch}}
           labels: |
             org.opencontainers.image.title=AudioAI Base Image
             org.opencontainers.image.description=Framework-independent base image for TI EdgeAI audio inference
             org.opencontainers.image.vendor=Texas Instruments
-            ti.sdk.version=${{ inputs.sdk_version }}
+            ti.sdk.version=${{ steps.sdk.outputs.version }}
             ti.build.stage=base
             ti.runner.arch=x86_64
 
@@ -98,7 +99,7 @@ jobs:
         run: |
           echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **SDK Version**: ${{ inputs.sdk_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **SDK Version**: ${{ steps.sdk.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Base Image**: arm64v8/ubuntu:24.04" >> $GITHUB_STEP_SUMMARY
           echo "- **Runner Type**: amd64 + QEMU" >> $GITHUB_STEP_SUMMARY
           echo "- **Push to Registry**: true" >> $GITHUB_STEP_SUMMARY
@@ -110,7 +111,7 @@ jobs:
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "### Pull Command" >> $GITHUB_STEP_SUMMARY
             echo '```bash' >> $GITHUB_STEP_SUMMARY
-            echo "docker pull ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ inputs.sdk_version }}" >> $GITHUB_STEP_SUMMARY
+            echo "docker pull ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ steps.sdk.outputs.version }}" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Build Performance" >> $GITHUB_STEP_SUMMARY
@@ -120,7 +121,7 @@ jobs:
       - name: Export image metadata
         run: |
           mkdir -p artifacts
-          echo "SDK_VERSION=${{ inputs.sdk_version }}" > artifacts/build-info.txt
+          echo "SDK_VERSION=${{ steps.sdk.outputs.version }}" > artifacts/build-info.txt
           echo "BASE_IMAGE=arm64v8/ubuntu:24.04" >> artifacts/build-info.txt
           echo "IMAGE_DIGEST=${{ steps.build.outputs.digest }}" >> artifacts/build-info.txt
           echo "RUNNER_ARCH=x86_64" >> artifacts/build-info.txt
@@ -131,6 +132,6 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: build-metadata-${{ inputs.sdk_version }}
+          name: build-metadata-${{ steps.sdk.outputs.version }}
           path: artifacts/
           retention-days: 30

@@ -2,14 +2,14 @@
 
 set -e
 
-# SDK version
-: "${SDK_VER:=11.1.0}"
+# Get the directory where this script is located
+SCRIPT_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+
+# Source SDK version
+source "${SCRIPT_DIR}/sdk_version.sh"
 
 # docker tags
 BASE_DOCKER_TAG=audioai-base:${SDK_VER}
-
-# Get the directory where this script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Check if base image exists locally
 if docker image inspect "$BASE_DOCKER_TAG" >/dev/null 2>&1; then

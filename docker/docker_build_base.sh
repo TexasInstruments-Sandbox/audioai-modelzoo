@@ -2,14 +2,15 @@
 
 set -e
 
+# Source SDK version
+SCRIPT_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+source "${SCRIPT_DIR}/sdk_version.sh"
+
 # ARCH
 ARCH=arm64
 
 # base image
 : "${BASE_IMAGE:=arm64v8/ubuntu:24.04}"
-
-# SDK version
-: "${SDK_VER:=11.1.0}"
 
 # docker tags
 BASE_DOCKER_TAG=audioai-base:${SDK_VER}

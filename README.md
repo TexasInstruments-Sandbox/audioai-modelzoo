@@ -8,7 +8,7 @@ A collection of optimized Deep Neural Network (DNN) models for Audio Tasks on TI
 ## System Requirements
 
 - **Processors**: AM62A (extensible to TDA4VM, AM67A, AM68A, AM69A)
-- **TIDL Version**: 11_01_06_00
+- **TIDL Version**: 11_02_02_00
 
 ## Quick Start
 
@@ -38,8 +38,8 @@ This repository uses a two-stage Docker build process (see [docker](docker) fold
 Pull the pre-built base image and build the TI image:
 
 ```bash
-docker pull ghcr.io/texasinstruments-sandbox/audioai-base:11.1.0
-docker tag ghcr.io/texasinstruments-sandbox/audioai-base:11.1.0 audioai-base:11.1.0
+docker pull ghcr.io/texasinstruments-sandbox/audioai-base:11.2.0
+docker tag ghcr.io/texasinstruments-sandbox/audioai-base:11.2.0 audioai-base:11.2.0
 cd docker
 ./docker_build_ti.sh
 ```
