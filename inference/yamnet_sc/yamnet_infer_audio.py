@@ -24,6 +24,11 @@ from pathlib import Path
 # Import the audio processing functions
 from yamnet_audio_processing import preprocess_audio_to_patches
 
+# Import global configuration (TIDL version)
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from config import TIDL_VER
+
 # Enable debugging only when needed
 DEBUG = False
 
@@ -267,21 +272,16 @@ Examples:
   python3 yamnet_infer_audio.py --audio-file samples/speech_whistling2.wav --detailed-report
         '''
     )
-    parser.add_argument('--audio-file', type=str, default='samples/miaow_16k.wav',
-                       help='Path to input WAV audio file (default: samples/miaow_16k.wav)')
-    parser.add_argument('--model', type=str, default=DEFAULT_MODEL, 
-                       help=f'Model name (default: {DEFAULT_MODEL})')
-    parser.add_argument('--tensor-bits', type=int, default=8, choices=[8, 16], 
-                       help='Tensor bits for quantization (default: 8)')
-    parser.add_argument('--debug-level', type=int, default=0, choices=range(4), 
-                       help='Debug level (0-3) for TIDL execution (default: 0)')
-    parser.add_argument('--detailed-report', action='store_true', 
-                       help='Generate a detailed performance report')
+    parser.add_argument('--audio-file', type=str, default='samples/miaow_16k.wav', help='Path to input WAV audio file (default: samples/miaow_16k.wav)')
+    parser.add_argument('--model', type=str, default=DEFAULT_MODEL, help=f'Model name (default: {DEFAULT_MODEL})')
+    parser.add_argument('--tensor-bits', type=int, default=8, choices=[8, 16], help='Tensor bits for quantization (default: 8)')
+    parser.add_argument('--debug-level', type=int, default=0, choices=range(4), help='Debug level (0-3) for TIDL execution (default: 0)')
+    parser.add_argument('--detailed-report', action='store_true', help='Generate a detailed performance report')
     args = parser.parse_args()
 
     # Basic configuration
     WORK_DIR = os.path.abspath(os.path.join(os.getcwd(), '..', '..'))
-    base_artifacts_folder = os.path.join(WORK_DIR, 'model_artifacts', '11_01_06_00', SOC)
+    base_artifacts_folder = os.path.join(WORK_DIR, 'model_artifacts', TIDL_VER, SOC)
     models_base_path = os.path.join(WORK_DIR, 'models', 'onnx')
     
     # Path to class labels

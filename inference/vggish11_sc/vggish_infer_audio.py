@@ -11,28 +11,28 @@ import platform
 from datetime import datetime
 
 # Import the audio processing functions
-try:
-    from audio_processing import preprocess_audio_waveform, log_mel_spectrogram
-except ImportError:
-    print("Warning: Could not import audio_processing. Ensure it's in the Python path.")
-    sys.exit(1)
+from audio_processing import preprocess_audio_waveform, log_mel_spectrogram
+
+# Import global configuration (TIDL version)
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from config import TIDL_VER
 
 # Enable debugging only when needed
 DEBUG = False
 
-def debug_print(*args, **kwargs):
-    """Print debug messages if DEBUG is enabled"""
-    if DEBUG:
-        print("[DEBUG]", *args, **kwargs)
+# Audio processing configuration for VGGish
+AUDIO_CONFIG_DEFAULT = {
+    'dataset': {
+        'sample_rate': 16000,
+        'duration': 4.0,
+        'n_fft': 1024,
+        'hop_length': 512,
+        'n_mels': 64
+    }
+}
 
-# Environment setup
-if not (SOC := os.environ.get("SOC")):
-    sys.exit("Error: SOC environment variable is not defined")
-
-# Default model for inference
-DEFAULT_MODEL = 'vggish11_20250324-1807_ptq'
-
-# UrbanSound8K class label mapping built-in
+# UrbanSound8K class label mapping (10 classes)
 CLASS_LABELS = {
     "0": "Air conditioner",
     "1": "Car horn",
@@ -46,16 +46,12 @@ CLASS_LABELS = {
     "9": "Street music"
 }
 
-# Audio processing configuration
-AUDIO_CONFIG_DEFAULT = {
-    'dataset': {
-        'sample_rate': 16000,
-        'duration': 4.0,
-        'n_fft': 1024,
-        'hop_length': 512,
-        'n_mels': 64
-    }
-}
+# Environment setup
+if not (SOC := os.environ.get("SOC")):
+    sys.exit("Error: SOC environment variable is not defined")
+
+# Default model for inference
+DEFAULT_MODEL = 'vggish11_20250324-1807_ptq'
 
 def get_benchmark_output(benchmark):
     proc_time = copy_time = cp_in_time = cp_out_time = 0
@@ -249,7 +245,7 @@ def main():
 
     # Basic configuration
     WORK_DIR = os.path.abspath(os.path.join(os.getcwd(), '..', '..'))
-    base_artifacts_folder = os.path.join(WORK_DIR, 'model_artifacts', '11_01_06_00', SOC, f'int{args.tensor_bits}')
+    base_artifacts_folder = os.path.join(WORK_DIR, 'model_artifacts', TIDL_VER, SOC)
     models_base_path = os.path.join(WORK_DIR, 'models', 'onnx')
 
     # Check if audio file exists
@@ -276,8 +272,9 @@ def main():
     features = preprocess_audio_to_features(args.audio_file, config)
 
     # Set up inference session
+    artifacts_folder = os.path.join(base_artifacts_folder, f"{args.model}_int{args.tensor_bits}")
     delegate_options = {
-        "artifacts_folder": os.path.join(base_artifacts_folder, f"{args.model}"),
+        "artifacts_folder": artifacts_folder,
         "debug_level": args.debug_level
     }
     session_options = ort.SessionOptions()

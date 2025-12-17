@@ -85,6 +85,7 @@ _**Inference in Jupyter Notebook**_: [inference/vggish11_sc/vggish_inference.ipy
 Python script version: Below should be run inside the Docker container.
 
 ```bash
+cd ~/tidl/audioai-modelzoo/inference/vggish11_sc
 python3 vggish_infer_audio.py --audio-file sample_wav/139951-9-0-9.wav --detailed-report
 ```
 
@@ -95,6 +96,7 @@ _**Inference in Jupyter Notebook**_: [inference/yamnet_sc/yamnet_inference.ipynb
 Python script version: Below should be run inside the Docker container.
 
 ```bash
+cd ~/tidl/audioai-modelzoo/inference/yamnet_sc
 python3 yamnet_infer_audio.py --audio-file samples/miaow_16k.wav --detailed-report
 ```
 
@@ -103,7 +105,7 @@ python3 yamnet_infer_audio.py --audio-file samples/miaow_16k.wav --detailed-repo
 |      Model      | Input Audio (sec) | Inference Time (ms) | Real-Time Factor |
 |:---------------:|:-----------------:|:-------------------:|:----------------:|
 |  GTCRN (FP32)   |       9.77        |       679.90        |      0.070       |
-| VGGish11 (INT8) |       4.00        |        91.10        |      0.023       |
+| VGGish11 (INT8) |       4.00        |         8.88        |      0.002       |
 |  YAMNet (INT8)  | 6.73 (7 patches)  |     17.53 total     |      0.003       |
 
 *Note: Real-Time Factor (RTF) = Processing Time / Audio Duration. RTF < 1.0 means faster than real-time. Performance metrics may vary depending on system conditions.*
