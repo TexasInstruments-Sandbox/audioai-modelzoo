@@ -4,7 +4,7 @@ set -e
 
 # Source SDK version
 SCRIPT_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
-source "${SCRIPT_DIR}/sdk_version.sh"
+source "${SCRIPT_DIR}/../VERSION"
 
 # base image
 : "${BASE_IMAGE:=arm64v8/ubuntu:24.04}"
@@ -30,6 +30,7 @@ echo "DOCKER_TAG = ${DOCKER_TAG}"
 DST_DIR=.
 
 # copy Processor SDK libraries to the temporary folder
+echo "Preparing SDK files and Python packages tarballs..."
 mkdir -p ${DST_DIR}/lib
 Lib_files=(
     /usr/lib/libtivision_apps.so.${TIVA_LIB_VER}

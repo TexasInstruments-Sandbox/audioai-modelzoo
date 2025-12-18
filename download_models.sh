@@ -3,9 +3,11 @@
 
 set -e
 
-# Configuration
-TIDL_VER="11_01_06_00"
-SOC="am62a"
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Source VERSION file for TIDL_VER and SOC
+source "$SCRIPT_DIR/VERSION"
 
 # Model files to download
 MODELS=(
@@ -13,9 +15,6 @@ MODELS=(
     "vggish11_20250324-1807_ptq.onnx"
     "yamnet_combined.onnx"
 )
-
-# Get the directory where this script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Configuration
 BASE_URL="https://software-dl.ti.com/jacinto7/esd/modelzoo/audioai/${TIDL_VER}/models/onnx"

@@ -2,7 +2,7 @@
 
 # Source SDK version
 SCRIPT_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
-source "${SCRIPT_DIR}/sdk_version.sh"
+source "${SCRIPT_DIR}/../VERSION"
 
 # ARCH: arm64
 ARCH=arm64

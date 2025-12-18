@@ -24,10 +24,18 @@ from pathlib import Path
 # Import the audio processing functions
 from yamnet_audio_processing import preprocess_audio_to_patches
 
-# Import global configuration (TIDL version)
-import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-from config import TIDL_VER
+# Parse TIDL_VER from VERSION file
+version_file = Path(__file__).parent.parent.parent / 'VERSION'
+if not version_file.exists():
+    raise FileNotFoundError(f"VERSION file not found at: {version_file}")
+
+config = dict(line.strip().split('=', 1) for line in version_file.read_text().splitlines() 
+              if line.strip() and not line.startswith('#'))
+
+if 'TIDL_VER' not in config:
+    raise ValueError("TIDL_VER not found in VERSION file")
+
+TIDL_VER = config['TIDL_VER']
 
 # Enable debugging only when needed
 DEBUG = False
