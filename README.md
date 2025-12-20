@@ -48,20 +48,17 @@ If you want to build the base image from scratch instead of pulling it, run `./d
 
 ## Start Jupyter Server
 
-Launch the Docker container:
-
+Launch the container
 ```bash
-/root/tidl/audioai-modelzoo/docker/docker_run.sh
+~/tidl/audioai-modelzoo/docker/docker_run.sh
 ```
 
-Inside the Docker container, start Jupyter Lab:
-
+Inside container, start Jupyter Lab
 ```bash
-cd ~/tidl/audioai-modelzoo/inference
 ./jupyter_lab.sh
 ```
 
-Access Jupyter Lab from your browser using the URL displayed in the terminal.
+The script will display a highlighted access URL. Open it in your browser to access Jupyter Lab with three inference notebooks pre-loaded in tabs.
 
 ![JupyterLab running inside the Docker container](docs/jupyter_lab_screenshot.jpg)
 

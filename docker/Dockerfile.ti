@@ -37,7 +37,7 @@ RUN mkdir -p /usr/local/lib/python3.12/dist-packages && \
 # add scripts
 ADD entrypoint.sh /root/
 
-ENV WORK_DIR=/root/tidl/audioai-modelzoo
+ENV WORK_DIR=/root/tidl/audioai-modelzoo/inference
 
 # add label
 LABEL TI_IMAGE_SOURCE=${BASE_IMAGE}
