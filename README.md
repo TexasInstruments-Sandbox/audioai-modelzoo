@@ -58,7 +58,7 @@ Inside the Docker container, start Jupyter Lab:
 
 ```bash
 cd ~/tidl/audioai-modelzoo/inference
-jupyter-lab --ip=$TARGET_IP --no-browser --allow-root
+./jupyter_lab.sh
 ```
 
 Access Jupyter Lab from your browser using the URL displayed in the terminal.
@@ -86,7 +86,7 @@ Python script version: Below should be run inside the Docker container.
 
 ```bash
 cd ~/tidl/audioai-modelzoo/inference/vggish11_sc
-python3 vggish_infer_audio.py --audio-file sample_wav/139951-9-0-9.wav --detailed-report
+python3 vggish_infer_audio.py --audio-file sample_wav/139951-9-0-9.wav
 ```
 
 #### YAMNet
@@ -97,7 +97,7 @@ Python script version: Below should be run inside the Docker container.
 
 ```bash
 cd ~/tidl/audioai-modelzoo/inference/yamnet_sc
-python3 yamnet_infer_audio.py --audio-file samples/miaow_16k.wav --detailed-report
+python3 yamnet_infer_audio.py --audio-file samples/miaow_16k.wav
 ```
 
 ## Performance Benchmarks
