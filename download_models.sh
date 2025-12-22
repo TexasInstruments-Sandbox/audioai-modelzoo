@@ -1,13 +1,26 @@
 #!/bin/bash
 # filepath: download_models.sh
 
-set -e
-
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Source VERSION file for TIDL_VER and SOC
+if [ ! -f "$SCRIPT_DIR/VERSION" ]; then
+    echo "Error: VERSION file not found at $SCRIPT_DIR/VERSION"
+    exit 1
+fi
 source "$SCRIPT_DIR/VERSION"
+
+# Validate required variables
+if [ -z "${TIDL_VER}" ]; then
+    echo "Error: TIDL_VER is not set in VERSION file"
+    exit 1
+fi
+
+# Use SOC from environment, default to am62a if not set
+if [ -z "${SOC}" ]; then
+    SOC=am62a
+fi
 
 # Model files to download
 MODELS=(
@@ -17,8 +30,8 @@ MODELS=(
 )
 
 # Configuration
-BASE_URL="https://software-dl.ti.com/jacinto7/esd/modelzoo/audioai/${TIDL_VER}/models/onnx"
-LOCAL_MODELS_DIR="$SCRIPT_DIR/models/onnx"  # Download models to models/onnx subdirectory
+BASE_URL="https://software-dl.ti.com/jacinto7/esd/modelzoo/audioai/models/onnx"
+LOCAL_MODELS_DIR="$SCRIPT_DIR/models/onnx"
 
 # Colors for better UI
 RED='\033[0;31m'
@@ -133,15 +146,23 @@ display_models_menu() {
     done
 }
 
+# Function to list download URLs
+list_urls() {
+    for model in "${MODELS[@]}"; do
+        echo "$BASE_URL/$model"
+    done
+}
+
 # Function to download selected models
 download_models() {
     local models=("$@")
+    local success_count=0
+    local fail_count=0
     
     echo
     print_color $CYAN "Starting download of ${#models[@]} model(s)..."
     echo
     
-    # Create the local models directory if it doesn't exist
     ensure_dir "$LOCAL_MODELS_DIR"
     
     for model in "${models[@]}"; do
@@ -151,36 +172,37 @@ download_models() {
         print_color $YELLOW "Downloading: $model"
         print_color $CYAN "  From: $remote_url"
         
-        # Download the file
-        if command -v wget &> /dev/null; then
-            if wget --progress=bar:force -O "$local_path" "$remote_url" 2>&1; then
+        if wget -O "$local_path" "$remote_url"; then
+            if [ -s "$local_path" ]; then
                 print_color $GREEN "✓ Downloaded: $model"
+                ((success_count++))
             else
-                print_color $RED "✗ Failed to download: $model"
+                print_color $RED "✗ Downloaded file is empty: $model"
+                rm -f "$local_path"
+                ((fail_count++))
             fi
-        elif command -v curl &> /dev/null; then
-            if curl -L --progress-bar -o "$local_path" "$remote_url"; then
-                print_color $GREEN "✓ Downloaded: $model"
-            else
-                print_color $RED "✗ Failed to download: $model"
-            fi
+        else
+            print_color $RED "✗ Failed to download: $model"
+            rm -f "$local_path"
+            ((fail_count++))
         fi
         echo
     done
     
     print_color $GREEN "Download process completed!"
     print_color $CYAN "Models saved to: $LOCAL_MODELS_DIR"
+    print_color $CYAN "Summary: $success_count succeeded, $fail_count failed"
 }
 
 # Main execution
 main() {
     print_color $BLUE "AudioAI ModelZoo Downloader"
-    print_color $BLUE "=========================="
+    print_color $BLUE "============================"
     echo
     
-    # Check for required tools
-    if ! command -v wget &> /dev/null && ! command -v curl &> /dev/null; then
-        print_color $RED "Error: Neither wget nor curl is available. Please install one of them."
+    # Check for wget
+    if ! command -v wget &> /dev/null; then
+        print_color $RED "Error: wget is not available. Please install wget."
         exit 1
     fi
     
@@ -211,9 +233,13 @@ while [[ $# -gt 0 ]]; do
             NON_INTERACTIVE=true
             shift
             ;;
+        -l|--list-urls)
+            list_urls
+            exit 0
+            ;;
         -h|--help)
             print_color $BLUE "AudioAI ModelZoo Downloader"
-            print_color $BLUE "============================"
+            print_color $BLUE "==========================="
             echo
             print_color $YELLOW "Usage: $0 [OPTIONS]"
             print_color $YELLOW "       $0 -h|--help"
@@ -224,6 +250,7 @@ while [[ $# -gt 0 ]]; do
             echo
             print_color $CYAN "Options:"
             print_color $CYAN "  -y, --yes            Non-interactive mode, download all models"
+            print_color $CYAN "  --list-urls          Print download URLs for all models"
             print_color $CYAN "  -h, --help           Show this help message"
             echo
             print_color $CYAN "Examples:"

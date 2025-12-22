@@ -1,5 +1,5 @@
 # AudioAI ModelZoo Version Configuration
 # It is sourced by bash scripts and parsed by Python scripts
 
-TIDL_VER=11_02_02_00
-SDK_VER=11.2.0
+TIDL_VER=11_01_06_00
+SDK_VER=11.1.0

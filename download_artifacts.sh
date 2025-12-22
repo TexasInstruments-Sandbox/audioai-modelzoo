@@ -1,13 +1,26 @@
 #!/bin/bash
 # filepath: download_artifacts.sh
 
-set -e
-
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Source VERSION file for TIDL_VER and SOC
+if [ ! -f "$SCRIPT_DIR/VERSION" ]; then
+    echo "Error: VERSION file not found at $SCRIPT_DIR/VERSION"
+    exit 1
+fi
 source "$SCRIPT_DIR/VERSION"
+
+# Validate required variables
+if [ -z "${TIDL_VER}" ]; then
+    echo "Error: TIDL_VER is not set in VERSION file"
+    exit 1
+fi
+
+# Use SOC from environment, default to am62a if not set
+if [ -z "${SOC}" ]; then
+    SOC=am62a
+fi
 
 # Artifact files to download
 ARTIFACTS=(
@@ -17,7 +30,7 @@ ARTIFACTS=(
 
 # Configuration
 BASE_URL="https://software-dl.ti.com/jacinto7/esd/modelzoo/audioai/${TIDL_VER}/modelartifacts/${SOC}"
-LOCAL_ARTIFACTS_DIR="$SCRIPT_DIR/model_artifacts/${TIDL_VER}/${SOC}"  # Download to model_artifacts subdirectory
+LOCAL_ARTIFACTS_DIR="$SCRIPT_DIR/model_artifacts/${TIDL_VER}/${SOC}"
 
 # Colors for better UI
 RED='\033[0;31m'
@@ -49,9 +62,9 @@ extract_archive() {
     
     case "$file" in
         *.tar.gz|*.tgz)
-            if tar -xzf "$file" -C "$dir" 2>/dev/null; then
+            if tar -xzf "$file" -C "$dir"; then
                 print_color $GREEN "✓ Extracted: $(basename "$file")"
-                rm "$file" 2>/dev/null
+                rm -f "$file"
                 print_color $YELLOW "Removed archive: $(basename "$file")"
                 return 0
             else
@@ -60,9 +73,9 @@ extract_archive() {
             fi
             ;;
         *.zip)
-            if unzip -q "$file" -d "$dir" 2>/dev/null; then
+            if unzip -q "$file" -d "$dir"; then
                 print_color $GREEN "✓ Extracted: $(basename "$file")"
-                rm "$file" 2>/dev/null
+                rm -f "$file"
                 print_color $YELLOW "Removed archive: $(basename "$file")"
                 return 0
             else
@@ -71,9 +84,9 @@ extract_archive() {
             fi
             ;;
         *.tar)
-            if tar -xf "$file" -C "$dir" 2>/dev/null; then
+            if tar -xf "$file" -C "$dir"; then
                 print_color $GREEN "✓ Extracted: $(basename "$file")"
-                rm "$file" 2>/dev/null
+                rm -f "$file"
                 print_color $YELLOW "Removed archive: $(basename "$file")"
                 return 0
             else
@@ -180,15 +193,23 @@ display_artifacts_menu() {
     done
 }
 
+# Function to list download URLs
+list_urls() {
+    for artifact in "${ARTIFACTS[@]}"; do
+        echo "$BASE_URL/$artifact"
+    done
+}
+
 # Function to download selected artifacts
 download_artifacts() {
     local artifacts=("$@")
+    local success_count=0
+    local fail_count=0
     
     echo
     print_color $CYAN "Starting download of ${#artifacts[@]} artifact(s)..."
     echo
     
-    # Create the local artifacts directory if it doesn't exist
     ensure_dir "$LOCAL_ARTIFACTS_DIR"
     
     for artifact in "${artifacts[@]}"; do
@@ -198,27 +219,28 @@ download_artifacts() {
         print_color $YELLOW "Downloading: $artifact"
         print_color $CYAN "  From: $remote_url"
         
-        # Download the file
         local download_success=0
-        if command -v wget &> /dev/null; then
-            if wget --progress=bar:force -O "$local_path" "$remote_url" 2>&1; then
+        if wget -O "$local_path" "$remote_url"; then
+            if [ -s "$local_path" ]; then
                 download_success=1
                 print_color $GREEN "✓ Downloaded: $artifact"
             else
-                print_color $RED "✗ Failed to download: $artifact"
+                print_color $RED "✗ Downloaded file is empty: $artifact"
+                rm -f "$local_path"
             fi
-        elif command -v curl &> /dev/null; then
-            if curl -L --progress-bar -o "$local_path" "$remote_url"; then
-                download_success=1
-                print_color $GREEN "✓ Downloaded: $artifact"
-            else
-                print_color $RED "✗ Failed to download: $artifact"
-            fi
+        else
+            print_color $RED "✗ Failed to download: $artifact"
+            rm -f "$local_path"
         fi
         
-        # Extract if download was successful
         if [ $download_success -eq 1 ]; then
-            extract_archive "$local_path" "$LOCAL_ARTIFACTS_DIR"
+            if extract_archive "$local_path" "$LOCAL_ARTIFACTS_DIR"; then
+                ((success_count++))
+            else
+                ((fail_count++))
+            fi
+        else
+            ((fail_count++))
         fi
         
         echo
@@ -226,6 +248,7 @@ download_artifacts() {
     
     print_color $GREEN "Download process completed!"
     print_color $CYAN "Artifacts saved to: $LOCAL_ARTIFACTS_DIR"
+    print_color $CYAN "Summary: $success_count succeeded, $fail_count failed"
 }
 
 # Main execution
@@ -234,9 +257,9 @@ main() {
     print_color $BLUE "============================"
     echo
     
-    # Check for required tools
-    if ! command -v wget &> /dev/null && ! command -v curl &> /dev/null; then
-        print_color $RED "Error: Neither wget nor curl is available. Please install one of them."
+    # Check for wget
+    if ! command -v wget &> /dev/null; then
+        print_color $RED "Error: wget is not available. Please install wget."
         exit 1
     fi
     
@@ -267,6 +290,10 @@ while [[ $# -gt 0 ]]; do
             NON_INTERACTIVE=true
             shift
             ;;
+        -l|--list-urls)
+            list_urls
+            exit 0
+            ;;
         -h|--help)
             print_color $BLUE "AudioAI Artifacts Downloader"
             print_color $BLUE "============================"
@@ -280,6 +307,7 @@ while [[ $# -gt 0 ]]; do
             echo
             print_color $CYAN "Options:"
             print_color $CYAN "  -y, --yes            Non-interactive mode, download all artifacts"
+            print_color $CYAN "  --list-urls          Print download URLs for all artifacts"
             print_color $CYAN "  -h, --help           Show this help message"
             echo
             print_color $CYAN "Examples:"
