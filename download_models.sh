@@ -153,6 +153,20 @@ list_urls() {
     done
 }
 
+# Download a file. software-dl.ti.com is an internal *.ti.com host that must be
+# reached directly; the external proxy (webproxy.ext.ti.com) cannot tunnel to it.
+# curl honors no_proxy; BusyBox wget on the EVM does not, so strip proxy vars for it.
+download_file() {
+    local url="$1"
+    local out="$2"
+    if command -v curl &> /dev/null; then
+        curl -fL --noproxy '*' -o "$out" "$url"
+    else
+        env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY \
+            wget -O "$out" "$url"
+    fi
+}
+
 # Function to download selected models
 download_models() {
     local models=("$@")
@@ -172,7 +186,7 @@ download_models() {
         print_color $YELLOW "Downloading: $model"
         print_color $CYAN "  From: $remote_url"
         
-        if wget -O "$local_path" "$remote_url"; then
+        if download_file "$remote_url" "$local_path"; then
             if [ -s "$local_path" ]; then
                 print_color $GREEN "✓ Downloaded: $model"
                 ((success_count++))
@@ -200,9 +214,9 @@ main() {
     print_color $BLUE "============================"
     echo
     
-    # Check for wget
-    if ! command -v wget &> /dev/null; then
-        print_color $RED "Error: wget is not available. Please install wget."
+    # Check for a download tool (curl preferred, wget fallback)
+    if ! command -v curl &> /dev/null && ! command -v wget &> /dev/null; then
+        print_color $RED "Error: neither curl nor wget is available. Please install one."
         exit 1
     fi
     
