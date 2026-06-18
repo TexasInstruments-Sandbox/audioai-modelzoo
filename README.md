@@ -62,6 +62,30 @@ The script will display a highlighted access URL. Open it in your browser to acc
 
 ![JupyterLab running inside the Docker container](docs/jupyter_lab_screenshot.jpg)
 
+## Native venv (no Docker)
+
+As an alternative to Docker, the notebooks can run directly on the AM62A rootfs in a Python virtual environment. This reuses the TIDL-enabled `onnxruntime` and `tflite_runtime` already present in the Processor SDK rootfs — no Docker image needed.
+
+### One-time setup (on the target)
+
+```bash
+cd ~/tidl/audioai-modelzoo
+./download_models.sh -y
+./download_artifacts.sh -y
+./venv/setup_venv.sh            # creates .venv/ with --system-site-packages
+```
+
+The setup script checks for the TIDL `onnxruntime` in the system site-packages and verifies `TIDLExecutionProvider` is available before finishing.
+
+### Start Jupyter Lab (native venv)
+
+```bash
+cd ~/tidl/audioai-modelzoo
+./venv/jupyter_lab_venv.sh
+```
+
+The script displays a highlighted access URL (token: `tidl`) and pre-loads the three inference notebooks in tabs, identical to the Docker experience.
+
 ## Pre-Trained Models
 
 Models are located in the **[models](models)** folder.

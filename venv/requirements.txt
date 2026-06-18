@@ -1,0 +1,11 @@
+--index-url https://download.pytorch.org/whl/cpu
+--extra-index-url https://pypi.org/simple
+
+torch
+torchaudio
+soundfile
+matplotlib
+notebook
+jupyterlab
+# keep numpy < 2 for ABI compatibility with the system-wide (TIDL) onnxruntime
+numpy<2
