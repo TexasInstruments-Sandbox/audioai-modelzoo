@@ -6,7 +6,7 @@ A collection of optimized Deep Neural Network (DNN) models for Audio Tasks on TI
 
 ## System Requirements
 
-- **Processors**: AM62A
+- **Processor**: AM62A
 - **TIDL Version**: 11_01_06_00
 
 ## Quick Start
@@ -17,7 +17,7 @@ On the Linux command line on the target (AM62A)
 
 ```bash
 mkdir -p ~/tidl && cd ~/tidl
-git clone https://github.com/TexasInstruments-Sandbox/audioai-modelzoo.git
+git clone https://github.com/TexasInstruments/audioai-modelzoo.git
 cd audioai-modelzoo
 ```
 
@@ -104,3 +104,7 @@ _Note: Real-Time Factor (RTF) = Processing Time / Audio Duration. RTF < 1.0 mean
 - **GTCRN**: https://github.com/Xiaobin-Rong/gtcrn
 - **VGGish**: https://github.com/tensorflow/models/tree/master/research/audioset/vggish
 - **YAMNet**: https://github.com/tensorflow/models/tree/master/research/audioset/yamnet, https://github.com/w-hc/torch_audioset
+
+## Questions & Feedback
+
+If you have any questions or feedback, please visit [TI E2E](https://e2e.ti.com/support/processors-group/processors/f/processors-forum).

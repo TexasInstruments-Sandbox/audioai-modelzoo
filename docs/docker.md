@@ -17,8 +17,8 @@ This repository uses a two-stage Docker build process (see the [docker](../docke
 Pull the pre-built base image and build the TI image:
 
 ```bash
-docker pull ghcr.io/texasinstruments-sandbox/audioai-base:11.1.0
-docker tag ghcr.io/texasinstruments-sandbox/audioai-base:11.1.0 audioai-base:11.1.0
+docker pull ghcr.io/texasinstruments/audioai-base:11.1.0
+docker tag ghcr.io/texasinstruments/audioai-base:11.1.0 audioai-base:11.1.0
 cd docker
 ./docker_build_ti.sh
 ```
