@@ -2,13 +2,12 @@
 
 A collection of optimized Deep Neural Network (DNN) models for Audio Tasks on TI EdgeAI processors. Models are converted from PyTorch and TensorFlow into embedded-friendly formats optimized for TI SoCs.
 
-
 **Notice**: The models in this repository are being made available for experimentation and development - they are not meant for deployment in production.
 
 ## System Requirements
 
 - **Processors**: AM62A
-- **TIDL Version**: 11_02_02_00
+- **TIDL Version**: 11_01_06_00
 
 ## Quick Start
 
@@ -22,51 +21,9 @@ git clone https://github.com/TexasInstruments-Sandbox/audioai-modelzoo.git
 cd audioai-modelzoo
 ```
 
-### Download Models and Model Artifacts
+### Setup (Python venv)
 
-```bash
-./download_models.sh -y
-./download_artifacts.sh -y
-```
-
-Both scripts provide interactive menus to select and download models.
-
-### Docker Image Setup
-
-This repository uses a two-stage Docker build process (see [docker](docker) folder). The base image contains all dependencies and is pre-built and available from GitHub Container Registry. The TI-specific image adds processor-specific libraries on top of the base.
-
-Pull the pre-built base image and build the TI image:
-
-```bash
-docker pull ghcr.io/texasinstruments-sandbox/audioai-base:11.2.0
-docker tag ghcr.io/texasinstruments-sandbox/audioai-base:11.2.0 audioai-base:11.2.0
-cd docker
-./docker_build_ti.sh
-```
-
-If you want to build the base image from scratch instead of pulling it, run `./docker_build_base.sh` before building the TI image.
-
-## Start Jupyter Server
-
-Launch the container
-```bash
-~/tidl/audioai-modelzoo/docker/docker_run.sh
-```
-
-Inside container, start Jupyter Lab
-```bash
-./jupyter_lab.sh
-```
-
-The script will display a highlighted access URL. Open it in your browser to access Jupyter Lab with three inference notebooks pre-loaded in tabs.
-
-![JupyterLab running inside the Docker container](docs/jupyter_lab_screenshot.jpg)
-
-## Native venv (no Docker)
-
-As an alternative to Docker, the notebooks can run directly on the AM62A rootfs in a Python virtual environment. This reuses the TIDL-enabled `onnxruntime` and `tflite_runtime` already present in the Processor SDK rootfs — no Docker image needed.
-
-### One-time setup (on the target)
+The notebooks run directly on the target rootfs in a Python virtual environment. This reuses the TIDL-enabled `onnxruntime` and `tflite_runtime` already present in the Processor SDK rootfs.
 
 ```bash
 cd ~/tidl/audioai-modelzoo
@@ -75,20 +32,32 @@ cd ~/tidl/audioai-modelzoo
 ./venv/setup_venv.sh            # creates ~/venv/modelzoo with --system-site-packages
 ```
 
-The setup script checks for the TIDL `onnxruntime` in the system site-packages and verifies `TIDLExecutionProvider` is available before finishing.
+The download scripts provide interactive menus (omit `-y`). The setup script checks for the TIDL `onnxruntime` in the system site-packages and verifies `TIDLExecutionProvider` is available before finishing.
 
-### Start Jupyter Lab (native venv)
+Activate the venv in each new shell before running the scripts below:
+
+```bash
+source ~/venv/modelzoo/bin/activate
+```
+
+### Start Jupyter Lab
 
 ```bash
 cd ~/tidl/audioai-modelzoo
 ./venv/jupyter_lab_venv.sh
 ```
 
-The script displays a highlighted access URL (token: `tidl`) and pre-loads the three inference notebooks in tabs, identical to the Docker experience.
+The script displays a highlighted access URL (token: `tidl`) and pre-loads the three inference notebooks in tabs.
+
+![JupyterLab](docs/jupyter_lab_screenshot.jpg)
+
+### Alternative: Docker
+
+A Docker-based setup is also available. See [docs/docker.md](docs/docker.md).
 
 ## Pre-Trained Models
 
-Models are located in the **[models](models)** folder.
+Models are located in the models folder.
 
 ### Speech Enhancement (Audio-to-Audio)
 
@@ -102,8 +71,7 @@ _**Inference in Jupyter Notebook**_: [inference/gtcrn_se/gtcrn_inference.ipynb](
 
 _**Inference in Jupyter Notebook**_: [inference/vggish11_sc/vggish_inference.ipynb](inference/vggish11_sc/vggish_inference.ipynb)
 
-
-Python script version: Below should be run inside the Docker container.
+Python script version (run in the activated venv):
 
 ```bash
 cd ~/tidl/audioai-modelzoo/inference/vggish11_sc
@@ -114,7 +82,7 @@ python3 vggish_infer_audio.py --audio-file sample_wav/139951-9-0-9.wav
 
 _**Inference in Jupyter Notebook**_: [inference/yamnet_sc/yamnet_inference.ipynb](inference/yamnet_sc/yamnet_inference.ipynb)
 
-Python script version: Below should be run inside the Docker container.
+Python script version (run in the activated venv):
 
 ```bash
 cd ~/tidl/audioai-modelzoo/inference/yamnet_sc
@@ -124,16 +92,15 @@ python3 yamnet_infer_audio.py --audio-file samples/miaow_16k.wav
 ## Performance Benchmarks
 
 |      Model      | Input Audio (sec) | Inference Time (ms) | Real-Time Factor |
-|:---------------:|:-----------------:|:-------------------:|:----------------:|
+| :-------------: | :---------------: | :-----------------: | :--------------: |
 |  GTCRN (FP32)   |       9.77        |       679.90        |      0.070       |
-| VGGish11 (INT8) |       4.00        |         8.88        |      0.002       |
+| VGGish11 (INT8) |       4.00        |        8.88         |      0.002       |
 |  YAMNet (INT8)  | 6.73 (7 patches)  |     17.53 total     |      0.003       |
 
-*Note: Real-Time Factor (RTF) = Processing Time / Audio Duration. RTF < 1.0 means faster than real-time. Performance metrics may vary depending on system conditions.*
+_Note: Real-Time Factor (RTF) = Processing Time / Audio Duration. RTF < 1.0 means faster than real-time. Performance metrics may vary depending on system conditions._
 
 ## Model References
 
 - **GTCRN**: https://github.com/Xiaobin-Rong/gtcrn
 - **VGGish**: https://github.com/tensorflow/models/tree/master/research/audioset/vggish
 - **YAMNet**: https://github.com/tensorflow/models/tree/master/research/audioset/yamnet, https://github.com/w-hc/torch_audioset
-
