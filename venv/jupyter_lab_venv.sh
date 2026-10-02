@@ -2,7 +2,7 @@
 #
 # Jupyter Lab Launch Script for AudioAI ModelZoo — native venv (no Docker)
 #
-# Launches Jupyter Lab from the native .venv with:
+# Launches Jupyter Lab from the native venv (~/venv/modelzoo) with:
 # - Simple token authentication (token='tidl')
 # - Auto-opens three inference notebooks in tabs
 # - Disables news notification popup
@@ -17,7 +17,7 @@
 
 SCRIPT_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
-VENV_DIR="${VENV_DIR:-${REPO_DIR}/.venv}"
+VENV_DIR="${VENV_DIR:-${HOME}/venv/modelzoo}"
 
 # Activate venv if not already active
 if [ -z "$VIRTUAL_ENV" ] && [ -f "${VENV_DIR}/bin/activate" ]; then
@@ -27,6 +27,10 @@ elif [ ! -f "${VENV_DIR}/bin/activate" ]; then
     echo "       Run ./venv/setup_venv.sh first." >&2
     exit 1
 fi
+
+# EVM login shells export PYTHONPATH=/usr/lib/python3.12/site-packages/, which
+# shadows the venv's newer packages (typing_extensions etc.).
+unset PYTHONPATH
 
 # Derive TARGET_IP from the primary network interface (interface-name-agnostic;
 # the Docker entrypoint.sh hardcodes eth0 but the bare EVM may use end0/eth1)

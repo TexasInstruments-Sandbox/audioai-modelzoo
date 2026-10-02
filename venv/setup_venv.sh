@@ -2,7 +2,7 @@
 #
 # One-time native (no-Docker) venv setup for AudioAI ModelZoo on AM62A EVM.
 #
-# Creates .venv/ in the repo root with --system-site-packages so the TIDL-enabled
+# Creates ~/venv/modelzoo (override with VENV_DIR) with --system-site-packages so the TIDL-enabled
 # onnxruntime and tflite_runtime from the Yocto rootfs (/usr/lib/python3.12/site-packages)
 # are accessible, while standard deps (torch, torchaudio, etc.) are pip-installed
 # directly into the venv. numpy<2 is pinned to stay ABI-compatible with the
@@ -20,7 +20,7 @@ SCRIPT_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
 source "${REPO_DIR}/VERSION"
 
-VENV_DIR="${VENV_DIR:-${REPO_DIR}/.venv}"
+VENV_DIR="${VENV_DIR:-${HOME}/venv/modelzoo}"
 SYS_PY=/usr/bin/python3
 
 echo "=== AudioAI ModelZoo: native venv setup ==="
@@ -57,6 +57,11 @@ echo ""
 echo "--- Creating venv ---"
 ${SYS_PY} -m venv --system-site-packages "${VENV_DIR}"
 source "${VENV_DIR}/bin/activate"
+# The EVM login shell exports PYTHONPATH=/usr/lib/python3.12/site-packages/, which
+# precedes the venv's site-packages and shadows newer pip-installed packages
+# (e.g. typing_extensions). The system packages stay reachable via
+# --system-site-packages, at lower priority.
+unset PYTHONPATH
 pip install --upgrade pip --quiet
 
 # --------------------------------------------------------------------------

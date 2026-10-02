@@ -72,7 +72,7 @@ As an alternative to Docker, the notebooks can run directly on the AM62A rootfs 
 cd ~/tidl/audioai-modelzoo
 ./download_models.sh -y
 ./download_artifacts.sh -y
-./venv/setup_venv.sh            # creates .venv/ with --system-site-packages
+./venv/setup_venv.sh            # creates ~/venv/modelzoo with --system-site-packages
 ```
 
 The setup script checks for the TIDL `onnxruntime` in the system site-packages and verifies `TIDLExecutionProvider` is available before finishing.
