@@ -7,16 +7,16 @@
 # - Auto-opens three inference notebooks in tabs
 # - Disables news notification popup
 #
-# Usage (on the EVM, from the repo root or inference/):
-#   ./venv/jupyter_lab_venv.sh
+# Usage (on the EVM, from the repo root):
+#   ./jupyter_lab_venv.sh
 #
-# Assumes the venv has been set up with ./venv/setup_venv.sh.
+# Assumes the venv has been set up with ./setup_venv.sh.
 # Must run as root on the EVM (~/tidl/audioai-modelzoo/inference path must resolve
 # to /root/tidl/audioai-modelzoo/inference for the JupyterLab workspace hash to match).
 #
 
 SCRIPT_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
-REPO_DIR="$(dirname "$SCRIPT_DIR")"
+REPO_DIR="$SCRIPT_DIR"
 VENV_DIR="${VENV_DIR:-${HOME}/venv/modelzoo}"
 
 # Activate venv if not already active
@@ -24,7 +24,7 @@ if [ -z "$VIRTUAL_ENV" ] && [ -f "${VENV_DIR}/bin/activate" ]; then
     source "${VENV_DIR}/bin/activate"
 elif [ ! -f "${VENV_DIR}/bin/activate" ]; then
     echo "Error: venv not found at ${VENV_DIR}" >&2
-    echo "       Run ./venv/setup_venv.sh first." >&2
+    echo "       Run ./setup_venv.sh first." >&2
     exit 1
 fi
 

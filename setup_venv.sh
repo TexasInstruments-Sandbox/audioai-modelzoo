@@ -9,15 +9,15 @@
 # system-built TIDL onnxruntime.
 #
 # Usage (on the EVM, from the repo root):
-#   ./venv/setup_venv.sh
+#   ./setup_venv.sh
 #
 # Run via evm-run.sh so the EVM proxy is sourced (needed for PyPI / PyTorch index):
-#   evm-run.sh "cd ~/tidl/audioai-modelzoo && ./venv/setup_venv.sh"
+#   evm-run.sh "cd ~/tidl/audioai-modelzoo && ./setup_venv.sh"
 #
 set -e
 
 SCRIPT_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
-REPO_DIR="$(dirname "$SCRIPT_DIR")"
+REPO_DIR="$SCRIPT_DIR"
 source "${REPO_DIR}/VERSION"
 
 VENV_DIR="${VENV_DIR:-${HOME}/venv/modelzoo}"
@@ -65,7 +65,7 @@ unset PYTHONPATH
 pip install --upgrade pip --quiet
 
 # --------------------------------------------------------------------------
-# 3. Install standard deps from venv/requirements.txt (torch, torchaudio,
+# 3. Install standard deps from requirements.txt (torch, torchaudio,
 #    soundfile, matplotlib, notebook, jupyterlab, numpy<2).
 #    onnxruntime is intentionally absent — it comes from the system rootfs.
 # --------------------------------------------------------------------------
@@ -129,4 +129,4 @@ echo "Activate the venv with:"
 echo "  source ${VENV_DIR}/bin/activate"
 echo ""
 echo "Start Jupyter Lab with:"
-echo "  ./venv/jupyter_lab_venv.sh"
+echo "  ./jupyter_lab_venv.sh"

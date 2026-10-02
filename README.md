@@ -7,6 +7,7 @@ A collection of optimized Deep Neural Network (DNN) models for Audio Tasks on TI
 ## System Requirements
 
 - **Processor**: AM62A
+- **SDK Version**: AM62A 11.1
 - **TIDL Version**: 11_01_06_00
 
 ## Quick Start
@@ -26,10 +27,9 @@ cd audioai-modelzoo
 The notebooks run directly on the target rootfs in a Python virtual environment. This reuses the TIDL-enabled `onnxruntime` and `tflite_runtime` already present in the Processor SDK rootfs.
 
 ```bash
-cd ~/tidl/audioai-modelzoo
 ./download_models.sh -y
 ./download_artifacts.sh -y
-./venv/setup_venv.sh            # creates ~/venv/modelzoo with --system-site-packages
+./setup_venv.sh      # creates ~/venv/modelzoo with --system-site-packages
 ```
 
 The download scripts provide interactive menus (omit `-y`). The setup script checks for the TIDL `onnxruntime` in the system site-packages and verifies `TIDLExecutionProvider` is available before finishing.
@@ -44,7 +44,7 @@ source ~/venv/modelzoo/bin/activate
 
 ```bash
 cd ~/tidl/audioai-modelzoo
-./venv/jupyter_lab_venv.sh
+./jupyter_lab_venv.sh
 ```
 
 The script displays a highlighted access URL (token: `tidl`) and pre-loads the three inference notebooks in tabs.
